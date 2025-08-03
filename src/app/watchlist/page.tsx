@@ -1,47 +1,43 @@
-//watchlist/page.tsx
 "use client";
-
 import { useEffect, useState } from "react";
 import CoinTable from "@/components/coinTable";
-import { getWatchlist } from "@/app/utils/watchlist";
-import { getCoinMarketsByIds } from "@/lib/api";
+
+interface Coin {
+  id: string;
+  name: string;
+  symbol: string;
+  current_price: number;
+  market_cap: number;
+  market_cap_rank: number;
+  price_change_percentage_24h: number;
+  total_volume: number;
+  image: string;
+}
 
 export default function WatchlistPage() {
-  const [coins, setCoins] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [watchlist, setWatchlist] = useState<string[]>([]);
+  const [coins, setCoins] = useState<Coin[]>([]);
 
   useEffect(() => {
-    const fetchWatchlistCoins = async () => {
-      try {
-        const watchlist = getWatchlist();
-        if (watchlist.length === 0) {
-          setCoins([]);
-          return;
-        }
+    const stored = localStorage.getItem("watchlist");
+    const ids = stored ? JSON.parse(stored) : [];
+    setWatchlist(ids);
 
-        const data = await getCoinMarketsByIds(watchlist);
-        setCoins(data);
-      } catch (err: any) {
-        console.error(err);
-        setError("Failed to load watchlist.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWatchlistCoins();
+    if (ids.length > 0) {
+      fetch(
+        `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids.join(
+          ","
+        )}`
+      )
+        .then((res) => res.json())
+        .then((data) => setCoins(data));
+    }
   }, []);
 
-  if (loading) return <p className="p-4">Loading Watchlist...</p>;
-  if (error) return <p className="p-4 text-red-500">{error}</p>;
-  if (coins.length === 0)
-    return <p className="p-4">No coins in your watchlist.</p>;
-
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">⭐ Your Watchlist</h1>
+    <main className="p-4">
+      <h1 className="text-2xl font-bold mb-4">Watchlist</h1>
       <CoinTable coins={coins} />
-    </div>
+    </main>
   );
 }
