@@ -1,3 +1,5 @@
+//components/coinchart.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -9,6 +11,7 @@ import {
   LinearScale,
   PointElement,
   Tooltip,
+  Filler,
 } from "chart.js";
 
 ChartJS.register(
@@ -16,37 +19,47 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
-  Tooltip
+  Tooltip,
+  Filler
 );
 
-export default function CoinChart({ id }: { id: string }) {
+interface Props {
+  id: string;
+}
+
+export default function CoinChart({ id }: Props) {
   const [days, setDays] = useState(7);
   const [chartData, setChartData] = useState<any>(null);
 
   useEffect(() => {
-    fetch(
-      `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=${days}`
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        const prices = data.prices.map((p: any) => ({
-          x: new Date(p[0]).toLocaleDateString(),
-          y: p[1],
-        }));
+    const fetchData = async () => {
+      const res = await fetch(
+        `https://api.coingecko.com/api/v3/coins/${id}/market_chart?vs_currency=usd&days=${days}`
+      );
+      const data = await res.json();
 
-        setChartData({
-          labels: prices.map((p: any) => p.x),
-          datasets: [
-            {
-              label: "Price (USD)",
-              data: prices.map((p: any) => p.y),
-              borderColor: "#3b82f6",
-              backgroundColor: "rgba(59, 130, 246, 0.2)",
-              fill: true,
-            },
-          ],
-        });
+      const prices = data.prices.map((p: any) => ({
+        x: new Date(p[0]).toLocaleDateString(),
+        y: p[1],
+      }));
+
+      setChartData({
+        labels: prices.map((p: any) => p.x),
+        datasets: [
+          {
+            label: "Price (USD)",
+            data: prices.map((p: any) => p.y),
+            borderColor: "#3b82f6",
+            backgroundColor: "rgba(59, 130, 246, 0.2)",
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0,
+          },
+        ],
       });
+    };
+
+    fetchData();
   }, [id, days]);
 
   if (!chartData) return <p>Loading chart...</p>;
@@ -58,8 +71,10 @@ export default function CoinChart({ id }: { id: string }) {
           <button
             key={d}
             onClick={() => setDays(d)}
-            className={`px-3 py-1 rounded ${
-              days === d ? "bg-blue-600 text-white" : "bg-gray-200"
+            className={`px-3 py-1 rounded transition-colors ${
+              days === d
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200 hover:bg-gray-300"
             }`}
           >
             {d === 1 ? "24h" : `${d}d`}

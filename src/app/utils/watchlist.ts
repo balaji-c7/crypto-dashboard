@@ -1,3 +1,5 @@
+//utils/watchlist.ts
+
 export const getWatchlist = (): string[] => {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("watchlist");

@@ -1,5 +1,4 @@
-// src/app/watchlist/page.tsx
-
+//watchlist/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -18,9 +17,9 @@ export default function WatchlistPage() {
         const watchlist = getWatchlist();
         if (watchlist.length === 0) {
           setCoins([]);
-          setLoading(false);
           return;
         }
+
         const data = await getCoinMarketsByIds(watchlist);
         setCoins(data);
       } catch (err: any) {
